@@ -1,3 +1,4 @@
+![Screenshot](Screenshot%202025-10-01%20013510.png)
 # SFinder - Subdomain Discovery Tool
 
 A powerful bash script for comprehensive subdomain enumeration using multiple reconnaissance tools.
