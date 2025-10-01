@@ -5,7 +5,7 @@ A powerful bash script for comprehensive subdomain enumeration using multiple re
 
 ##  Features
 
-- Multi-tool integration (subfinder, findomain, assetfinder, subdominator, crt.sh)
+- Multi-tool integration (subfinder, findomain, assetfinder, subdominator, HackerTarget, subdomain center, crt.sh)
 - Live subdomain detection with httpxI
 - Duplicate removal and sorting
 
