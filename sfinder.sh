@@ -169,9 +169,21 @@ curl -s "https://crt.sh/?q=%25.$DOMAIN&output=json" | jq -r '.[].name_value' 2>/
 CRTSH_COUNT=$(wc -l < "$TEMP_DIR/crtsh.txt" | tr -d ' ')
 print_success "crt.sh found: $CRTSH_COUNT subdomains"
 
+# 6. Subdomain Center
+print_progress "Querying Subdomain Center..."
+curl -s "https://api.subdomain.center/?domain=$DOMAIN" | jq -r '.[]' 2>/dev/null | sort -u > "$TEMP_DIR/subdomain_center.txt"
+SUBDOMAIN_CENTER_COUNT=$(wc -l < "$TEMP_DIR/subdomain_center.txt" | tr -d ' ')
+print_success "Subdomain Center found: $SUBDOMAIN_CENTER_COUNT subdomains"
+
+# 7. HackerTarget
+print_progress "Querying HackerTarget..."
+curl -s "https://api.hackertarget.com/hostsearch/?q=$DOMAIN" | cut -d',' -f1 2>/dev/null | sort -u > "$TEMP_DIR/hackertarget.txt"
+HACKERTARGET_COUNT=$(wc -l < "$TEMP_DIR/hackertarget.txt" | tr -d ' ')
+print_success "HackerTarget found: $HACKERTARGET_COUNT subdomains"
+
 # Combine all results
 print_progress "Combining and sorting results..."
-cat "$TEMP_DIR/subfinder.txt" "$TEMP_DIR/findomain.txt" "$TEMP_DIR/assetfinder.txt" "$TEMP_DIR/subdominator.txt" "$TEMP_DIR/crtsh.txt" | sort -u > "$OUTPUT_DIR/all_subdomains.txt"
+cat "$TEMP_DIR/subfinder.txt" "$TEMP_DIR/findomain.txt" "$TEMP_DIR/assetfinder.txt" "$TEMP_DIR/subdominator.txt" "$TEMP_DIR/crtsh.txt" "$TEMP_DIR/subdomain_center.txt" "$TEMP_DIR/hackertarget.txt" | sort -u > "$OUTPUT_DIR/all_subdomains.txt"
 
 # Remove empty lines and clean up
 sed -i '/^$/d' "$OUTPUT_DIR/all_subdomains.txt"
