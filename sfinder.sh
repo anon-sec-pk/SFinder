@@ -136,34 +136,42 @@ print_success() {
     echo -e "${GREEN}[+] $1${NC}"
 }
 
+# Temporary directory for intermediate files
+TEMP_DIR=$(mktemp -d)
+
 # 1. Subfinder
 print_progress "Running Subfinder..."
-subfinder -d $DOMAIN -all -silent > "$OUTPUT_DIR/subfinder.txt"
-print_success "Subfinder found: $(wc -l < "$OUTPUT_DIR/subfinder.txt" | tr -d ' ') subdomains"
+subfinder -d $DOMAIN -all -silent > "$TEMP_DIR/subfinder.txt"
+SUBFINDER_COUNT=$(wc -l < "$TEMP_DIR/subfinder.txt" | tr -d ' ')
+print_success "Subfinder found: $SUBFINDER_COUNT subdomains"
 
 # 2. Findomain
 print_progress "Running Findomain..."
-findomain -t $DOMAIN --quiet > "$OUTPUT_DIR/findomain.txt"
-print_success "Findomain found: $(wc -l < "$OUTPUT_DIR/findomain.txt" | tr -d ' ') subdomains"
+findomain -t $DOMAIN --quiet > "$TEMP_DIR/findomain.txt"
+FINDOMAIN_COUNT=$(wc -l < "$TEMP_DIR/findomain.txt" | tr -d ' ')
+print_success "Findomain found: $FINDOMAIN_COUNT subdomains"
 
 # 3. Assetfinder
 print_progress "Running Assetfinder..."
-assetfinder --subs-only $DOMAIN > "$OUTPUT_DIR/assetfinder.txt"
-print_success "Assetfinder found: $(wc -l < "$OUTPUT_DIR/assetfinder.txt" | tr -d ' ') subdomains"
+assetfinder --subs-only $DOMAIN > "$TEMP_DIR/assetfinder.txt"
+ASSETFINDER_COUNT=$(wc -l < "$TEMP_DIR/assetfinder.txt" | tr -d ' ')
+print_success "Assetfinder found: $ASSETFINDER_COUNT subdomains"
 
 # 4. Subdominator
 print_progress "Running Subdominator..."
-subdominator -d $DOMAIN > "$OUTPUT_DIR/subdominator.txt" 2>/dev/null
-print_success "Subdominator found: $(wc -l < "$OUTPUT_DIR/subdominator.txt" | tr -d ' ') subdomains"
+subdominator -d $DOMAIN > "$TEMP_DIR/subdominator.txt" 2>/dev/null
+SUBDOMINATOR_COUNT=$(wc -l < "$TEMP_DIR/subdominator.txt" | tr -d ' ')
+print_success "Subdominator found: $SUBDOMINATOR_COUNT subdomains"
 
 # 5. crt.sh
 print_progress "Querying crt.sh..."
-curl -s "https://crt.sh/?q=%25.$DOMAIN&output=json" | jq -r '.[].name_value' 2>/dev/null | sed 's/\*\.//g' | sort -u > "$OUTPUT_DIR/crtsh.txt"
-print_success "crt.sh found: $(wc -l < "$OUTPUT_DIR/crtsh.txt" | tr -d ' ') subdomains"
+curl -s "https://crt.sh/?q=%25.$DOMAIN&output=json" | jq -r '.[].name_value' 2>/dev/null | sed 's/\*\.//g' | sort -u > "$TEMP_DIR/crtsh.txt"
+CRTSH_COUNT=$(wc -l < "$TEMP_DIR/crtsh.txt" | tr -d ' ')
+print_success "crt.sh found: $CRTSH_COUNT subdomains"
 
 # Combine all results
 print_progress "Combining and sorting results..."
-cat "$OUTPUT_DIR/subfinder.txt" "$OUTPUT_DIR/findomain.txt" "$OUTPUT_DIR/assetfinder.txt" "$OUTPUT_DIR/subdominator.txt" "$OUTPUT_DIR/crtsh.txt" | sort -u > "$OUTPUT_DIR/all_subdomains.txt"
+cat "$TEMP_DIR/subfinder.txt" "$TEMP_DIR/findomain.txt" "$TEMP_DIR/assetfinder.txt" "$TEMP_DIR/subdominator.txt" "$TEMP_DIR/crtsh.txt" | sort -u > "$OUTPUT_DIR/all_subdomains.txt"
 
 # Remove empty lines and clean up
 sed -i '/^$/d' "$OUTPUT_DIR/all_subdomains.txt"
@@ -177,6 +185,9 @@ httpx -l "$OUTPUT_DIR/all_subdomains.txt" -silent -timeout 10 > "$OUTPUT_DIR/liv
 
 LIVE_SUBS=$(wc -l < "$OUTPUT_DIR/live_subdomains.txt" | tr -d ' ')
 print_success "Live subdomains found: $LIVE_SUBS"
+
+# Clean up temporary files
+rm -rf "$TEMP_DIR"
 
 # Final Summary
 echo ""
@@ -196,11 +207,6 @@ echo ""
 echo -e "${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${YELLOW}║                     GENERATED FILES                          ║${NC}"
 echo -e "${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
-echo -e "${GREEN}• subfinder.txt${NC}       - Subfinder results"
-echo -e "${GREEN}• findomain.txt${NC}       - Findomain results"
-echo -e "${GREEN}• assetfinder.txt${NC}     - Assetfinder results"
-echo -e "${GREEN}• subdominator.txt${NC}    - Subdominator results"
-echo -e "${GREEN}• crtsh.txt${NC}           - crt.sh results"
 echo -e "${GREEN}• all_subdomains.txt${NC}  - All unique subdomains"
 echo -e "${GREEN}• live_subdomains.txt${NC} - Live subdomains"
 echo ""
