@@ -38,12 +38,6 @@ chmod +x sfinder.sh
 ```
 
 ##  Output Files
-
-- `subfinder.txt` - Subfinder results
-- `findomain.txt` - Findomain results  
-- `assetfinder.txt` - Assetfinder results
-- `subdominator.txt` - Subdominator results
-- `crtsh.txt` - crt.sh results
 - `all_subdomains.txt` - All unique subdomains
 - `live_subdomains.txt` - Live subdomains
 
